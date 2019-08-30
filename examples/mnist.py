@@ -20,7 +20,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 from autoopt import AutoOptError
-from autoopt.optim import GaussNewton, AutoSGD, AutoAdam, AutoGaussNewton
+from autoopt.optim import AutoSGD, AutoAdam, AutoAdagrad
 
 
 class FCNet(nn.Module):
@@ -74,7 +74,7 @@ def get_args(arguments=None):
     parser.add_argument('--model', choices=['fc', 'cnn'], default='fc',
                         help='[fc] Type of NN model. fc: Fully connected NN, cnn: Convolutional NN.')
     parser.add_argument('--optimizer',
-                        choices=['sgd', 'adam', 'gauss-newton', 'gn', 'auto-sgd', 'auto-adam', 'auto-gauss-newton', 'auto-gn'],
+                        choices=['sgd', 'adam', 'adagrad', 'auto-sgd', 'auto-adam', 'auto-adagrad'],
                         default='sgd', help='[sgd] Optimizer to be used in training.')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='[64] input batch size for training.')
@@ -156,10 +156,10 @@ def get_optimizer(args, model):
         return torch.optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta_1, args.beta_2), eps=args.eps)
     elif args.optimizer == 'auto-adam':
         return AutoAdam(model)
-    elif args.optimizer == 'gauss-newton' or args.optimizer == 'gn':
-        return GaussNewton(model, lr=args.lr, betas=(args.beta_1, args.beta_2), eps=args.eps)
-    elif args.optimizer == 'auto-gauss-newton' or args.optimizer == 'auto-gn':
-        return AutoGaussNewton(model, beta2=args.beta_2, eps=args.eps)
+    elif args.optimizer == 'adagrad':
+        return torch.optim.Adagrad(model.parameters(), lr=args.lr)
+    elif args.optimizer == 'auto-adagrad':
+        return AutoAdagrad(model)
     else:
         raise AutoOptError('Error: Unknown optimizer: {0}'.format(args.optimizer))
 
