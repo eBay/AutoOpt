@@ -121,7 +121,12 @@ class AutoOptimizer(Optimizer):
                 layer.weight.grad_all = torch.bmm(layer.dZ.t().unsqueeze(2), layer.A_prev.t().unsqueeze(1)) * N
                 layer.bias.grad_all = gradients[(name, 'dZ')] * N
             elif isinstance(layer, torch.nn.Conv2d):
-                layer.weight.grad_all = torch.zeros([N] + list(layer.weight.grad.shape))
+                shape = [N] + list(layer.weight.grad.shape)
+                if next(self.model.parameters()).is_cuda:
+                    layer.weight.grad_all = torch.cuda.FloatTensor(*shape).fill_(0)
+                else:
+                    layer.weight.grad_all = torch.zeros(*shape)
+
                 for n in range(N):
                     layer.weight.grad_all[n] = torch.nn.functional.conv2d(
                         layer.A_prev[n].unsqueeze(1), layer.dZ[n].unsqueeze(1)).transpose(1, 0) * N
