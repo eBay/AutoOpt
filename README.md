@@ -31,7 +31,7 @@ pip install [autoopt-path]
 Please see the sample code provided in the `examples` folder to understand
 how this package can be used in training of various ML models.
 
-## Citing AutoOpt
+## Citing AutoOpt paper
 
 Please cite the 
 [AutoOpt paper](https://arxiv.org/pdf/1908.07607.pdf) 
