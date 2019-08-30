@@ -13,4 +13,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-AUTOOPT_VERSION = '0.1.0'
+AUTOOPT_VERSION = '0.1.1'
