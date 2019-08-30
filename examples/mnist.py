@@ -69,7 +69,7 @@ class CNN(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def get_args():
+def get_args(arguments=None):
     parser = argparse.ArgumentParser(description='AutoOpt MNIST Example')
     parser.add_argument('--model', choices=['fc', 'cnn'], default='fc',
                         help='[fc] Type of NN model. fc: Fully connected NN, cnn: Convolutional NN.')
@@ -96,14 +96,15 @@ def get_args():
                         help='[0.999] Beta 2, Exponential decay rate for the moment estimates.')
     parser.add_argument('--eps', type=float, default=1e-3, metavar='E',
                         help='[1e-3] Epsilon, regularization coefficient.')
-    parser.add_argument('--no-cuda', action='store_true', default=False,
-                        help='[False] Disables CUDA training.')
+    parser.add_argument('--cuda', action='store_true', default=False,
+                        help='[False] Train on GPU.')
     parser.add_argument('--seed', type=int, default=-1, metavar='S',
                         help='[-1] Random seed (-1 means no seed).')
     parser.add_argument('--log-interval', type=int, default=100, metavar='I',
                         help='[100] How many batches to wait before logging training status.')
-    args = parser.parse_args()
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    parser.add_argument('--data-folder', default='./data', help='[./data] Path to ')
+    args = parser.parse_args(arguments)
+    args.cuda = args.cuda and torch.cuda.is_available()
 
     if args.seed != -1:
         torch.manual_seed(args.seed)
@@ -117,19 +118,50 @@ def get_args():
 def get_data(args):
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('./data', train=True, download=True,
+        datasets.MNIST(args.data_folder, train=True, download=True,
                        transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('./data', train=False, transform=transforms.Compose([
+        datasets.MNIST(args.data_folder, train=False, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
     return train_loader, test_loader
+
+
+def get_model(args):
+    if args.model == 'fc':
+        model = FCNet()
+    elif args.model == 'cnn':
+        model = CNN()
+    else:
+        raise AutoOptError('Error: Unknown model type: {0}'.format(args.model))
+
+    if args.cuda:
+        model.cuda()
+
+    return model
+
+
+def get_optimizer(args, model):
+    if args.optimizer == 'sgd':
+        return torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, dampening=args.momentum)
+    elif args.optimizer == 'auto-sgd':
+        return AutoSGD(model)
+    elif args.optimizer == 'adam':
+        return torch.optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta_1, args.beta_2), eps=args.eps)
+    elif args.optimizer == 'auto-adam':
+        return AutoAdam(model)
+    elif args.optimizer == 'gauss-newton' or args.optimizer == 'gn':
+        return GaussNewton(model, lr=args.lr, betas=(args.beta_1, args.beta_2), eps=args.eps)
+    elif args.optimizer == 'auto-gauss-newton' or args.optimizer == 'auto-gn':
+        return AutoGaussNewton(model, beta2=args.beta_2, eps=args.eps)
+    else:
+        raise AutoOptError('Error: Unknown optimizer: {0}'.format(args.optimizer))
 
 
 use_mse_loss = False
@@ -185,30 +217,8 @@ def test(model, args, test_loader):
 def main():
     args = get_args()
     train_loader, test_loader = get_data(args)
-    if args.model == 'fc':
-        model = FCNet()
-    elif args.model == 'cnn':
-        model = CNN()
-    else:
-        raise AutoOptError('Error: Unknown model type: {0}'.format(args.model))
-
-    if args.cuda:
-        model.cuda()
-
-    if args.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, dampening=args.momentum)
-    elif args.optimizer == 'auto-sgd':
-        optimizer = AutoSGD(model)
-    elif args.optimizer == 'adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta_1, args.beta_2), eps=args.eps)
-    elif args.optimizer == 'auto-adam':
-        optimizer = AutoAdam(model)
-    elif args.optimizer == 'gauss-newton' or args.optimizer == 'gn':
-        optimizer = GaussNewton(model, lr=args.lr, betas=(args.beta_1, args.beta_2), eps=args.eps)
-    elif args.optimizer == 'auto-gauss-newton' or args.optimizer == 'auto-gn':
-        optimizer = AutoGaussNewton(model, beta2=args.beta_2, eps=args.eps)
-    else:
-        raise AutoOptError('Error: Unknown optimizer: {0}'.format(args.optimizer))
+    model = get_model(args)
+    optimizer = get_optimizer(args)
 
     for epoch in range(1, args.epochs + 1):
         train(epoch, model, args, train_loader, optimizer)
