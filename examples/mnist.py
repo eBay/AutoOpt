@@ -218,7 +218,7 @@ def main():
     args = get_args()
     train_loader, test_loader = get_data(args)
     model = get_model(args)
-    optimizer = get_optimizer(args)
+    optimizer = get_optimizer(args, model)
 
     for epoch in range(1, args.epochs + 1):
         train(epoch, model, args, train_loader, optimizer)
