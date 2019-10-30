@@ -57,6 +57,7 @@ class AutoGaussNewton(AutoOptimizer):
             loss = closure()
 
         self.model.auto_params = {'lr': [], 'momentum': []}
+        max_exp_avg_sq = 0
 
         for group in self.param_groups:
             for param in group['params']:
@@ -101,9 +102,11 @@ class AutoGaussNewton(AutoOptimizer):
                 if len(param.grad_all.size()) == 2:
                     exp_avg_sq_all = exp_avg_sq_all[self.f_w_x != 0] / self.f_w_x[self.f_w_x != 0].unsqueeze(1)
                 elif len(param.grad_all.size()) == 3:
-                    exp_avg_sq_all = exp_avg_sq_all[self.f_w_x != 0] / self.f_w_x[self.f_w_x != 0].unsqueeze(1).unsqueeze(1)
+                    exp_avg_sq_all = exp_avg_sq_all[self.f_w_x != 0] / \
+                                     self.f_w_x[self.f_w_x != 0].unsqueeze(1).unsqueeze(1)
                 elif len(param.grad_all.size()) == 5:
-                    exp_avg_sq_all = exp_avg_sq_all[self.f_w_x != 0] / self.f_w_x[self.f_w_x != 0].unsqueeze(1).unsqueeze(1).unsqueeze(1).unsqueeze(1)
+                    exp_avg_sq_all = exp_avg_sq_all[self.f_w_x != 0] / \
+                                     self.f_w_x[self.f_w_x != 0].unsqueeze(1).unsqueeze(1).unsqueeze(1).unsqueeze(1)
                 else:
                     raise AutoOptError('Error: Unhandled grad_all size.')
 
@@ -125,7 +128,7 @@ class AutoGaussNewton(AutoOptimizer):
                 # bias_correction1 = 1 - beta1 ** state['step']
                 # bias_correction2 = 1 - beta2 ** state['step']
 
-                step_size = group['lr'] # * math.sqrt(bias_correction2) / bias_correction1
+                step_size = group['lr']  # * math.sqrt(bias_correction2) / bias_correction1
 
                 exp_avg.mul_(beta1).add_(1 - beta1, grad)
                 param.data.addcdiv_(-step_size, exp_avg, denom)
