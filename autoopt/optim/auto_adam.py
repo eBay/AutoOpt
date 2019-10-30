@@ -13,21 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-""" 
-Copyright 2019 eBay Inc.
-Developers/Architects: Selcuk Kopru, Tomer Lancewicki
-
-Licensed under the Apache License, Version 2.0 (the "License");
-You may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import math
 import torch
 from autoopt.optim import AutoOptimizer
@@ -38,7 +23,7 @@ class AutoAdam(AutoOptimizer):
 
     Arguments:
         model (torch.nn.Module): Model containing the parameters to optimize
-        beta2 (float, optional): coefficient used for computing
+        betas (float, optional): beta1 and beta2 coefficient used for computing
             running averages of gradient and its square (default: 0.999)
         eps (float, optional): term added to the denominator to improve
             numerical stability (default: 1e-8)
@@ -78,6 +63,7 @@ class AutoAdam(AutoOptimizer):
             loss = closure()
 
         self.model.auto_params = {'lr': [], 'momentum': []}
+        max_exp_avg_sq = 0
 
         for group in self.param_groups:
             for param in group['params']:
@@ -130,7 +116,7 @@ class AutoAdam(AutoOptimizer):
 
                 sqrt_bias_correction2 = math.sqrt(1 - beta2 ** state['step']) / (1 - beta1)
                 hessian = denom / sqrt_bias_correction2
-                # print(torch.norm(hessian))
+
                 self.auto_tune(parameter=param, hessian=hessian, verbose=verbose)
                 group['lr'] = 1 - param.gamma[0]
                 adaptive_beta1 = param.gamma[1] / (1 - param.gamma[0])

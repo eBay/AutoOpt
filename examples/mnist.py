@@ -102,7 +102,7 @@ def get_args(arguments=None):
                         help='[-1] Random seed (-1 means no seed).')
     parser.add_argument('--log-interval', type=int, default=100, metavar='I',
                         help='[100] How many batches to wait before logging training status.')
-    parser.add_argument('--data-folder', default='./data', help='[./data] Path to ')
+    parser.add_argument('--data-folder', default='./data', help='[./data] Path to the data')
     args = parser.parse_args(arguments)
     args.cuda = args.cuda and torch.cuda.is_available()
 
