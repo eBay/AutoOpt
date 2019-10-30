@@ -33,7 +33,7 @@ class AutoAdam(AutoOptimizer):
             (default: False)
     """
 
-    def __init__(self, model, betas=(0.9, 0.999), eps=1e-8, weight_decay=0, amsgrad=False, ewma=0.9, gamma0=0.999):
+    def __init__(self, model, betas=(0.9, 0.999), eps=1e-3, weight_decay=0, amsgrad=False, ewma=0.99999, gamma0=0.999):
         if not 0.0 <= eps:
             raise ValueError("Invalid epsilon value: {}".format(eps))
         if not 0.0 <= betas[0] < 1.0:
