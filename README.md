@@ -38,11 +38,14 @@ Please cite the
 if you are using it in a scientific publication.
 
 ```bibtex
-@misc{1908.07607,
-Author = {Tomer Lancewicki and Selcuk Kopru},
-Title = {Automatic and Simultaneous Adjustment of Learning Rate and Momentum for Stochastic Gradient Descent},
-Year = {2019},
-Eprint = {arXiv:1908.07607},
+@inproceedings{9053316,
+  author={T. {Lancewicki} and S. {Kopru}},
+  booktitle={ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)}, 
+  title={Automatic and Simultaneous Adjustment of Learning Rate and Momentum for Stochastic Gradient-based Optimization Methods}, 
+  year={2020},
+  volume={},
+  number={},
+  pages={3127-3131}
 }
 ```
 
